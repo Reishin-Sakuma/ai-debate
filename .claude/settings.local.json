@@ -3,7 +3,8 @@
     "allow": [
       "Bash(bash:*)",
       "Bash(wsl bash:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(claude:*)"
     ],
     "deny": []
   }
