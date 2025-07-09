@@ -142,7 +142,7 @@ class AIDebateOrchestrator:
         
         return await self._ask_ai_with_retry("Gemini", command_args, "")
 
-    async def conduct_debate(self, topic: str, rounds: int = 3) -> Dict[str, Any]:
+    async def conduct_debate(self, topic: str, rounds: int = 3, summary_ai: str = "gemini") -> Dict[str, Any]:
         """討論を実行"""
         debate_log = {"topic": topic, "rounds": rounds, "exchanges": [], "summary": ""}
         claude_context = ""
@@ -178,7 +178,14 @@ class AIDebateOrchestrator:
 
             self._log("\n📝 討論要約を生成中...")
             summary_prompt = f'以下は「{topic}」についての討論です。\n\n{self._format_debate_for_summary(debate_log)}\n\nこの討論の要約と結論を300文字程度で述べてください。'
-            summary, _ = await self.ask_gemini(summary_prompt)
+            
+            if summary_ai.lower() == "claude":
+                self._log("🤖 Claudeが要約を生成中...")
+                summary, _ = await self.ask_claude(summary_prompt)
+            else:
+                self._log("🧠 Geminiが要約を生成中...")
+                summary, _ = await self.ask_gemini(summary_prompt)
+            
             debate_log["summary"] = summary
 
         except DebateError as e:
@@ -219,7 +226,7 @@ class AIDebateOrchestrator:
         self._log(f"💾 討論ログをMarkdownで保存しました: {filename}")
 
 
-async def run_cli(topic: str, rounds: int):
+async def run_cli(topic: str, rounds: int, summary_ai: str = "gemini"):
     """CLIモードで討論を実行"""
     orchestrator = AIDebateOrchestrator()
     
@@ -236,7 +243,7 @@ async def run_cli(topic: str, rounds: int):
         sys.exit(1)
     
     try:
-        debate_log = await orchestrator.conduct_debate(topic, rounds)
+        debate_log = await orchestrator.conduct_debate(topic, rounds, summary_ai)
         orchestrator.save_debate_log_as_markdown(debate_log)
     except KeyboardInterrupt:
         print("\n⏹️  討論が中断されました。")
@@ -246,13 +253,20 @@ async def run_cli(topic: str, rounds: int):
 def main():
     """CLIモードのみで実行"""
     if len(sys.argv) < 2:
-        print("使用方法: python ai_debate.py '討論テーマ' [ラウンド数]")
-        print("例: python ai_debate.py 'AIの倫理的課題について' 5")
+        print("使用方法: python ai_debate.py '討論テーマ' [ラウンド数] [要約AI]")
+        print("例: python ai_debate.py 'AIの倫理的課題について' 5 claude")
+        print("要約AI: claude または gemini (デフォルト: gemini)")
         sys.exit(1)
     
     topic = sys.argv[1]
     rounds = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-    asyncio.run(run_cli(topic, rounds))
+    summary_ai = sys.argv[3] if len(sys.argv) > 3 else "gemini"
+    
+    if summary_ai.lower() not in ["claude", "gemini"]:
+        print("❌ 要約AIは 'claude' または 'gemini' を指定してください")
+        sys.exit(1)
+    
+    asyncio.run(run_cli(topic, rounds, summary_ai))
 
 if __name__ == "__main__":
     main()
