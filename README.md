@@ -13,6 +13,8 @@ Claude CodeとGemini CLIを使った自動討論システムです。WSL環境�
 - **Markdown出力**: 討論結果をMarkdownファイルで保存
 - **リトライ機能**: 通信エラー時の自動リトライ
 - **動的パス検出**: Node.jsやCLIツールのパスを自動検出
+- **要約AI選択**: 討論完了後に要約を生成するAIを選択可能
+- **インタラクティブ選択**: 要約AIを実行時に選択（または事前指定）
 
 ## 必要な環境
 
@@ -39,17 +41,21 @@ npm install -g @google/gemini-cli
 ## 使用方法
 
 ```bash
-python ai_dabate.py '討論テーマ' [ラウンド数]
+python ai_dabate.py '討論テーマ' [ラウンド数] [要約AI]
 ```
 
 ### 例
 
 ```bash
-# 3ラウンドの討論（デフォルト）
+# 3ラウンドの討論（デフォルト）- 要約AIは討論後に選択
 python ai_dabate.py 'AIの倫理的課題について'
 
 # 5ラウンドの討論
 python ai_dabate.py 'AIの倫理的課題について' 5
+
+# 要約AIを事前に指定（claude または gemini）
+python ai_dabate.py 'AIの倫理的課題について' 3 claude
+python ai_dabate.py 'AIの倫理的課題について' 5 gemini
 ```
 
 ## 出力
@@ -58,6 +64,7 @@ python ai_dabate.py 'AIの倫理的課題について' 5
 
 1. **コンソール出力**: リアルタイムで討論の進行状況を表示
 2. **Markdownファイル**: `debate_log_[timestamp].md`形式で詳細な討論ログを保存
+3. **要約生成**: 討論完了後に選択されたAIによる要約を生成
 
 ## 主な機能
 
@@ -74,6 +81,7 @@ python ai_dabate.py 'AIの倫理的課題について' 5
 - `ask_claude()`: Claude Codeへの質問
 - `ask_gemini()`: Gemini CLIへの質問
 - `save_debate_log_as_markdown()`: 討論ログのMarkdown保存
+- `_get_interactive_summary_choice()`: インタラクティブな要約AI選択
 
 ## トラブルシューティング
 
@@ -88,6 +96,21 @@ python ai_dabate.py 'AIの倫理的課題について' 5
 1. インストールを確認: `npm list -g @google/gemini-cli`
 2. 認証設定を確認
 3. パスが正しく設定されているか確認
+
+## 実行時のインタラクション
+
+### 要約AI選択
+
+要約AIを実行時に指定しない場合は、討論完了後に以下の選択肢が表示されます：
+
+1. **🤖 Claude Code** - 論理的で構造化された要約
+2. **🧠 Gemini CLI** - 包括的で洞察に富んだ要約
+
+コマンドラインで直接指定する場合：
+```bash
+python ai_dabate.py 'テーマ' 3 claude  # Claude Code
+python ai_dabate.py 'テーマ' 3 gemini  # Gemini CLI
+```
 
 ## ライセンス
 
