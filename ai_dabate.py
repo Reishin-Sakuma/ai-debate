@@ -15,9 +15,11 @@ class DebateError(Exception):
     pass
 
 class AIDebateOrchestrator:
-    def __init__(self, log_callback: Callable[[str], None] = None):
+    def __init__(self, claude_stance: str = None, gemini_stance: str = None, log_callback: Callable[[str], None] = None):
         # まず最初にlog_callbackを設定
         self.log_callback = log_callback
+        self.claude_stance = claude_stance
+        self.gemini_stance = gemini_stance
         
         # ツール検出（WSL内で直接実行）
         self.node_path = self._get_command_path("node")
@@ -155,13 +157,18 @@ class AIDebateOrchestrator:
         try:
             for round_num in range(1, rounds + 1):
                 self._log(f"\n🔥 ラウンド {round_num}")
-                claude_prompt = f'討論テーマ: {topic}\n\nラウンド {round_num} / {rounds}\n\n{claude_context}\n\n簡潔で論理的な意見を150-200文字で述べてください。'
+                
+                # Claudeのプロンプト生成（立場指定あり）
+                claude_stance_instruction = f"あなたは「{self.claude_stance}」の立場で討論してください。\n" if self.claude_stance else ""
+                claude_prompt = f'{claude_stance_instruction}討論テーマ: {topic}\n\nラウンド {round_num} / {rounds}\n\n{claude_context}\n\n簡潔で論理的な意見を150-200文字で述べてください。'
                 claude_response, claude_time = await self.ask_claude(claude_prompt)
                 self._log(f"💭 Claude: {claude_response} ({claude_time:.2f}秒)")
 
                 await asyncio.sleep(3)
 
-                gemini_prompt = f'討論テーマ: {topic}\n\nClaude Codeの意見: {claude_response}\n\n{gemini_context}\n\nClaude Codeとは異なる視点から、簡潔で論理的な意見を150-200文字で述べてください。'
+                # Geminiのプロンプト生成（立場指定あり）
+                gemini_stance_instruction = f"あなたは「{self.gemini_stance}」の立場で討論してください。\n" if self.gemini_stance else ""
+                gemini_prompt = f'{gemini_stance_instruction}討論テーマ: {topic}\n\nClaude Codeの意見: {claude_response}\n\n{gemini_context}\n\nClaude Codeとは異なる視点から、簡潔で論理的な意見を150-200文字で述べてください。'
                 gemini_response, gemini_time = await self.ask_gemini(gemini_prompt)
                 self._log(f"🎯 Gemini: {gemini_response} ({gemini_time:.2f}秒)")
 
@@ -256,9 +263,9 @@ class AIDebateOrchestrator:
         self._log(f"💾 討論ログをMarkdownで保存しました: {filename}")
 
 
-async def run_cli(topic: str, rounds: int, summary_ai: str = None):
+async def run_cli(topic: str, rounds: int, summary_ai: str = None, claude_stance: str = None, gemini_stance: str = None):
     """CLIモードで討論を実行"""
-    orchestrator = AIDebateOrchestrator()
+    orchestrator = AIDebateOrchestrator(claude_stance=claude_stance, gemini_stance=gemini_stance)
     
     # 実行環境を表示
     print(f"🖥️ 実行環境: WSL/Linux")
@@ -283,20 +290,23 @@ async def run_cli(topic: str, rounds: int, summary_ai: str = None):
 def main():
     """CLIモードのみで実行"""
     if len(sys.argv) < 2:
-        print("使用方法: python ai_debate.py '討論テーマ' [ラウンド数] [要約AI]")
-        print("例: python ai_debate.py 'AIの倫理的課題について' 5 claude")
+        print("使用方法: python ai_debate.py '討論テーマ' [ラウンド数] [要約AI] [Claudeの立場] [Geminiの立場]")
+        print("例: python ai_debate.py 'AIの倫理的課題について' 5 claude 賛成派 反対派")
         print("要約AI: claude または gemini (省略時は討論後に選択)")
+        print("立場例: 賛成派/反対派、保守派/革新派、実用主義/理想主義")
         sys.exit(1)
     
     topic = sys.argv[1]
     rounds = int(sys.argv[2]) if len(sys.argv) > 2 else 3
     summary_ai = sys.argv[3] if len(sys.argv) > 3 else None
+    claude_stance = sys.argv[4] if len(sys.argv) > 4 else None
+    gemini_stance = sys.argv[5] if len(sys.argv) > 5 else None
     
     if summary_ai is not None and summary_ai.lower() not in ["claude", "gemini"]:
         print("❌ 要約AIは 'claude' または 'gemini' を指定してください")
         sys.exit(1)
     
-    asyncio.run(run_cli(topic, rounds, summary_ai))
+    asyncio.run(run_cli(topic, rounds, summary_ai, claude_stance, gemini_stance))
 
 if __name__ == "__main__":
     main()
