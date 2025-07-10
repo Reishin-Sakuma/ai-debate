@@ -4,7 +4,8 @@
       "Bash(bash:*)",
       "Bash(wsl bash:*)",
       "Bash(python3:*)",
-      "Bash(claude:*)"
+      "Bash(claude:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
