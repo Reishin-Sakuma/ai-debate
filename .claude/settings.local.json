@@ -5,7 +5,13 @@
       "Bash(wsl bash:*)",
       "Bash(python3:*)",
       "Bash(claude:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python:*)",
+      "Bash(where claude)",
+      "Bash(where gemini)",
+      "Bash(set CLAUDE_CODE_GIT_BASH_PATH=C:Program FilesGitbinbash.exe)",
+      "Bash(\"C:\\Program Files\\Git\\bin\\bash.exe\" -c \"claude --version\")",
+      "Bash(gemini:*)"
     ],
     "deny": []
   }
