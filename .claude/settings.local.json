@@ -5,7 +5,8 @@
       "Bash(wsl bash:*)",
       "Bash(python3:*)",
       "Bash(claude:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }
